@@ -83,8 +83,10 @@ Singleton {
         store.setText(family + " " + variant);
     }
     function syncGtk() {
-        const scheme = isLight ? "default" : "prefer-dark";
-        const gtk = isLight ? "adw-gtk3" : "adw-gtk3-dark";
+        // read `variant` directly: isLight can still be stale when this runs from onVariantChanged
+        const light = variant === "light";
+        const scheme = light ? "default" : "prefer-dark";
+        const gtk = light ? "adw-gtk3" : "adw-gtk3-dark";
         Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", scheme]);
         Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", gtk]);
     }
@@ -101,6 +103,7 @@ Singleton {
                 root.variant = parts[1];
             }
             root.ready = true;
+            root.syncGtk();   // make the system match the saved theme at startup
         }
         onLoadFailed: root.ready = true
     }

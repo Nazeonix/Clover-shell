@@ -16,6 +16,10 @@ Scope {
     readonly property bool barOpen: !BarCtl.hidden && (!BarCtl.autoHide || peek)
     property real topInset: barOpen ? Theme.barHeight : 0
     Behavior on topInset { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+    // left/right/bottom outline follows the bar: gone when the bar is hidden / auto-hidden
+    // (visual animates; the layout reserve below only changes when pinned, so peeking never reflows)
+    property real frameT: barOpen ? Theme.frameThickness : 0
+    Behavior on frameT { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
     onHotChanged: {
         if (hot) { hideTimer.stop(); peek = true; }
@@ -38,7 +42,7 @@ Scope {
         anchors { bottom: true; left: true; right: true }
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
-        exclusiveZone: Theme.frameThickness
+        exclusiveZone: (BarCtl.hidden || BarCtl.autoHide) ? 0 : Theme.frameThickness
         mask: Region {}
         implicitWidth: 1
         implicitHeight: 1
@@ -48,7 +52,7 @@ Scope {
         anchors { left: true; top: true; bottom: true }
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
-        exclusiveZone: Theme.frameThickness
+        exclusiveZone: (BarCtl.hidden || BarCtl.autoHide) ? 0 : Theme.frameThickness
         mask: Region {}
         implicitWidth: 1
         implicitHeight: 1
@@ -58,7 +62,7 @@ Scope {
         anchors { right: true; top: true; bottom: true }
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
-        exclusiveZone: Theme.frameThickness
+        exclusiveZone: (BarCtl.hidden || BarCtl.autoHide) ? 0 : Theme.frameThickness
         mask: Region {}
         implicitWidth: 1
         implicitHeight: 1
@@ -75,10 +79,10 @@ Scope {
         color: "transparent"
 
         mask: Region {
-            x: Theme.frameThickness
+            x: scope.frameT
             y: scope.topInset
-            width: win.width - Theme.frameThickness * 2
-            height: win.height - scope.topInset - Theme.frameThickness
+            width: win.width - scope.frameT * 2
+            height: win.height - scope.topInset - scope.frameT
             intersection: Intersection.Xor
         }
 
@@ -86,10 +90,10 @@ Scope {
             id: root
             anchors.fill: parent
 
-            readonly property real fl: Theme.frameThickness
+            readonly property real fl: scope.frameT
             readonly property real ft: scope.topInset
-            readonly property real fr: Theme.frameThickness
-            readonly property real fb: Theme.frameThickness
+            readonly property real fr: scope.frameT
+            readonly property real fb: scope.frameT
             readonly property real r: Theme.frameRadius
 
             Shape {
@@ -125,7 +129,7 @@ Scope {
 
             Item {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                width: Theme.frameThickness + 2
+                width: scope.frameT + 2
                 height: 360
                 HoverHandler { id: rightHover }
             }
