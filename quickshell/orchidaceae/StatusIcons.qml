@@ -7,10 +7,18 @@ import Quickshell.Bluetooth
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 
-// order: layout, mic, volume+%, network+ssid, bluetooth, battery+%, bell
+// order: layout, mic, volume+%, network+ssid (click = wifi), bluetooth (click = devices), battery+%, bell
 RowLayout {
     id: root
     spacing: 12
+
+    property alias netAnchor: netSlot
+    property alias btAnchor: btSlot
+    property bool wifiOpen: false
+    property bool btOpen: false
+    signal wifiClicked()
+    signal btClicked()
+    function refreshNet() { if (!nm.running) nm.running = true }
 
     readonly property bool isNiri: !!Quickshell.env("NIRI_SOCKET")
 
@@ -132,24 +140,37 @@ RowLayout {
         interval: 5000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: if (!nm.running) nm.running = true
     }
-    RowLayout {
-        spacing: 4
-        Text {
-            text: root.net === "ethernet" ? "\uf0e8" : "\uf1eb"
-            color: root.net === "none" ? Theme.muted : Theme.foreground
-            font { family: Theme.iconFont; pixelSize: 15 }
+    Item {
+        id: netSlot
+        implicitWidth: netRow.implicitWidth
+        implicitHeight: netRow.implicitHeight
+
+        RowLayout {
+            id: netRow
+            spacing: 4
+            Text {
+                text: root.net === "ethernet" ? "\uf0e8" : "\uf1eb"
+                color: root.wifiOpen ? Theme.accent
+                     : root.net === "none" ? Theme.muted : Theme.foreground
+                font { family: Theme.iconFont; pixelSize: 15 }
+            }
+            Text {
+                visible: root.net !== "none" && root.netName !== ""
+                text: root.netName.length > 12 ? root.netName.slice(0, 11) + "…" : root.netName
+                color: root.wifiOpen ? Theme.accent : Theme.foreground
+                font { family: Theme.fontFamily; pixelSize: 13 }
+            }
+            Text {
+                visible: root.net === "none"
+                text: "off"
+                color: root.wifiOpen ? Theme.accent : Theme.muted
+                font { family: Theme.fontFamily; pixelSize: 13 }
+            }
         }
-        Text {
-            visible: root.net !== "none" && root.netName !== ""
-            text: root.netName.length > 12 ? root.netName.slice(0, 11) + "…" : root.netName
-            color: Theme.foreground
-            font { family: Theme.fontFamily; pixelSize: 13 }
-        }
-        Text {
-            visible: root.net === "none"
-            text: "off"
-            color: Theme.muted
-            font { family: Theme.fontFamily; pixelSize: 13 }
+        MouseArea {
+            anchors.fill: netRow
+            anchors.margins: -6
+            onClicked: root.wifiClicked()
         }
     }
 
@@ -162,10 +183,23 @@ RowLayout {
         for (let i = 0; i < d.length; i++) if (d[i].connected) return true;
         return false;
     }
-    Text {
-        text: "\uf293"
-        color: root.btConnected ? Theme.accent : root.btOn ? Theme.foreground : Theme.muted
-        font { family: Theme.iconFont; pixelSize: 15 }
+    Item {
+        id: btSlot
+        implicitWidth: btIcon.implicitWidth
+        implicitHeight: btIcon.implicitHeight
+        Text {
+            id: btIcon
+            text: "\uf293"
+            color: root.btOpen ? Theme.accent
+                 : root.btConnected ? Theme.accent
+                 : root.btOn ? Theme.foreground : Theme.muted
+            font { family: Theme.iconFont; pixelSize: 15 }
+        }
+        MouseArea {
+            anchors.fill: btIcon
+            anchors.margins: -6
+            onClicked: root.btClicked()
+        }
     }
 
     // ---- battery (icon + %) ----

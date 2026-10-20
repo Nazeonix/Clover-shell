@@ -12,6 +12,8 @@ Tray Tray.qml
 ThemeSwitcher ThemeSwitcher.qml
 ActiveWindow ActiveWindow.qml
 StatusIcons StatusIcons.qml
+WifiMenu WifiMenu.qml
+BtMenu BtMenu.qml
 PowerButton PowerButton.qml
 Dashboard Dashboard.qml
 Calendar Calendar.qml

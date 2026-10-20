@@ -70,6 +70,17 @@ Scope {
 
     Dashboard { screen: scope.modelData; triggerHovered: topHover.hovered }
     PowerMenu { screen: scope.modelData; triggerHovered: rightHover.hovered }
+    WifiMenu {
+        id: wifiMenu
+        screen: scope.modelData
+        anchorItem: statusIcons.netAnchor
+        onUpdated: statusIcons.refreshNet()
+    }
+    BtMenu {
+        id: btMenu
+        screen: scope.modelData
+        anchorItem: statusIcons.btAnchor
+    }
 
     PanelWindow {
         id: win
@@ -176,7 +187,13 @@ Scope {
                     anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                     spacing: 16
                     Tray {}
-                    StatusIcons {}
+                    StatusIcons {
+                        id: statusIcons
+                        wifiOpen: wifiMenu.open
+                        btOpen: btMenu.open
+                        onWifiClicked: { btMenu.open = false; wifiMenu.toggle(); }
+                        onBtClicked: { wifiMenu.open = false; btMenu.toggle(); }
+                    }
                     Text {
                         text: "\uf013"
                         color: SettingsPanel.open ? Theme.accent : Theme.foreground
