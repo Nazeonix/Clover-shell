@@ -7,9 +7,9 @@ Singleton {
     id: root
 
     // ---- selection -------------------------------------------------------
-    property string family: "kanagawa"   // kanagawa | gruvbox | ayu | catppuccin | mono
+    property string family: "kanagawa"   // kanagawa | gruvbox | ayu | catppuccin | mono | alpenglow | tokyonight | rosepine
     property string variant: "dark"      // dark | alt | light
-    readonly property var families: ["kanagawa", "gruvbox", "ayu", "catppuccin", "mono"]
+    readonly property var families: ["kanagawa", "gruvbox", "ayu", "catppuccin", "mono", "alpenglow", "tokyonight", "rosepine"]
     readonly property var variants: ["dark", "alt", "light"]
     readonly property bool isLight: variant === "light"
     property bool ready: false
@@ -52,6 +52,21 @@ Singleton {
             dark:  { label: "dark",   background: "#141414", foreground: "#e8e8e8", accent: "#a0a0a0", secondary: "#787878", alert: "#c44c4c", border: "#2e2e2e" },
             alt:   { label: "hard",   background: "#0c0c0c", foreground: "#f0f0f0", accent: "#b0b0b0", secondary: "#888888", alert: "#c44c4c", border: "#222222" },
             light: { label: "light",  background: "#f4f4f4", foreground: "#1a1a1a", accent: "#555555", secondary: "#777777", alert: "#b03030", border: "#cccccc" }
+        },
+        alpenglow: {
+            dark:  { label: "dusk",    background: "#1B1A2E", foreground: "#F0DFD5", accent: "#FF8F6B", secondary: "#F2A7C3", alert: "#FF5F7A", border: "#38355A" },
+            alt:   { label: "night",   background: "#11111F", foreground: "#E8D8D0", accent: "#FF9D7A", secondary: "#E993B8", alert: "#F0587A", border: "#2A2848" },
+            light: { label: "morning", background: "#FBF1EA", foreground: "#3D3550", accent: "#D9573A", secondary: "#C2517F", alert: "#C8274A", border: "#E6D3C8" }
+        },
+        tokyonight: {
+            dark:  { label: "night", background: "#1a1b26", foreground: "#c0caf5", accent: "#7aa2f7", secondary: "#bb9af7", alert: "#f7768e", border: "#292e42" },
+            alt:   { label: "storm", background: "#24283b", foreground: "#c0caf5", accent: "#7aa2f7", secondary: "#bb9af7", alert: "#f7768e", border: "#3b4261" },
+            light: { label: "day",   background: "#e1e2e7", foreground: "#3760bf", accent: "#2e7de9", secondary: "#9854f1", alert: "#f52a65", border: "#c4c8da" }
+        },
+        rosepine: {
+            dark:  { label: "main", background: "#191724", foreground: "#e0def4", accent: "#c4a7e7", secondary: "#ebbcba", alert: "#eb6f92", border: "#26233a" },
+            alt:   { label: "moon", background: "#232136", foreground: "#e0def4", accent: "#c4a7e7", secondary: "#ea9a97", alert: "#eb6f92", border: "#393552" },
+            light: { label: "dawn", background: "#faf4ed", foreground: "#575279", accent: "#907aa9", secondary: "#d7827e", alert: "#b4637a", border: "#dfdad9" }
         }
     })
     readonly property var current: palettes[family][variant]
@@ -83,6 +98,21 @@ Singleton {
             dark:  ["#141414","#c44c4c","#8a8a8a","#a0a0a0","#787878","#909090","#989898","#c8c8c8", "#4a4a4a","#d86060","#9a9a9a","#b8b8b8","#888888","#a8a8a8","#b0b0b0","#e8e8e8"],
             alt:   ["#0c0c0c","#c44c4c","#8a8a8a","#a0a0a0","#787878","#909090","#989898","#c8c8c8", "#4a4a4a","#d86060","#9a9a9a","#b8b8b8","#888888","#a8a8a8","#b0b0b0","#f0f0f0"],
             light: ["#1a1a1a","#b03030","#555555","#666666","#777777","#6a6a6a","#606060","#cccccc", "#888888","#c04040","#666666","#777777","#888888","#7a7a7a","#707070","#f4f4f4"]
+        },
+        alpenglow: {
+            dark:  ["#2a2840","#ff5f7a","#8fbf8a","#f5c26b","#7aa2e0","#c49ae6","#6fc7c0","#e8d9cf", "#6b678f","#ff7f94","#a9d9a0","#ffd98a","#93b8f0","#d6b2f2","#8fd8d1","#fff3ea"],
+            alt:   ["#1c1b30","#f0587a","#86b582","#eebb62","#6f98d6","#b78fdc","#66bdb6","#ddcdc4", "#5d5a82","#ff7690","#9fcf98","#fbd080","#88aee6","#cda6ec","#84cec7","#fbece3"],
+            light: ["#3d3550","#c8274a","#4f8a4b","#b9751b","#3a6cc0","#8a4fb8","#2a8c8c","#7a6f8a", "#9a8ea6","#de3d62","#5fa05a","#cf8a2c","#4f82d9","#a066cf","#3da3a3","#2b2540"]
+        },
+        tokyonight: {
+            dark:  ["#15161e","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#a9b1d6", "#414868","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#c0caf5"],
+            alt:   ["#1d202f","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#a9b1d6", "#414868","#f7768e","#9ece6a","#e0af68","#7aa2f7","#bb9af7","#7dcfff","#c0caf5"],
+            light: ["#b4b5b9","#f52a65","#587539","#8c6c3e","#2e7de9","#9854f1","#007197","#6172b0", "#a1a6c5","#ff4774","#5c8524","#a27629","#358aff","#a463ff","#007ea8","#3760bf"]
+        },
+        rosepine: {
+            dark:  ["#26233a","#eb6f92","#31748f","#f6c177","#9ccfd8","#c4a7e7","#ebbcba","#e0def4", "#6e6a86","#eb6f92","#31748f","#f6c177","#9ccfd8","#c4a7e7","#ebbcba","#e0def4"],
+            alt:   ["#393552","#eb6f92","#3e8fb0","#f6c177","#9ccfd8","#c4a7e7","#ea9a97","#e0def4", "#6e6a86","#eb6f92","#3e8fb0","#f6c177","#9ccfd8","#c4a7e7","#ea9a97","#e0def4"],
+            light: ["#f2e9e1","#b4637a","#286983","#ea9d34","#56949f","#907aa9","#d7827e","#575279", "#9893a5","#b4637a","#286983","#ea9d34","#56949f","#907aa9","#d7827e","#575279"]
         }
     })
 

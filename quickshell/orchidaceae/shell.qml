@@ -14,6 +14,12 @@ Scope {
     // brightness OSD (IPC: qs ipc call brightness up|down|set <percent>)
     Brightness {}
 
+    // Win98/XP style alt-tab (IPC: qs ipc call switcher next|prev|commit|cancel|look)
+    Switcher {}
+
+    // Win98/XP title bars above windows (IPC: qs ipc call winbar toggle|look|restore)
+    WinBar {}
+
     // wallpaper picker card (IPC: qs ipc call wallpaper picker)
     WallpaperSwitcher {}
 

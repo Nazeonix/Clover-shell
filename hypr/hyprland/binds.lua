@@ -30,6 +30,8 @@ hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(wall))                         -- Wal
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(them))                         -- Theme toggle
 hl.bind(mainMod .. " + I", hl.dsp.exec_cmd(next))                         -- Theme next
 hl.bind(mainMod .. " + H", hl.dsp.exec_cmd(hide))                         -- Toggle bar
+hl.bind("ALT + Tab",         hl.dsp.exec_cmd("qs -c orchidaceae ipc call switcher next"))  -- Window switcher
+hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("qs -c orchidaceae ipc call switcher prev"))  -- Window switcher (back)
 
 -- ============================================================
 -- SCREENSHOT  (Print = area select → annotate with satty)

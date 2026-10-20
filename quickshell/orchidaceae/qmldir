@@ -26,3 +26,5 @@ WallpaperLayer WallpaperLayer.qml
 WallpaperSwitcher WallpaperSwitcher.qml
 singleton SettingsPanel SettingsPanel.qml
 Brightness Brightness.qml
+Switcher Switcher.qml
+WinBar WinBar.qml

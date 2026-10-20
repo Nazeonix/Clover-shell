@@ -127,7 +127,19 @@ Singleton {
                 Setting {
                     label: "Theme"
                     Repeater {
-                        model: Theme.families
+                        model: Theme.families.slice(0, 4)
+                        delegate: Btn {
+                            required property string modelData
+                            text: modelData
+                            on: Theme.family === modelData
+                            onClicked: Theme.setTheme(modelData, Theme.variant)
+                        }
+                    }
+                }
+                Setting {
+                    label: ""
+                    Repeater {
+                        model: Theme.families.slice(4, 8)
                         delegate: Btn {
                             required property string modelData
                             text: modelData
@@ -165,6 +177,10 @@ Singleton {
                 Setting {
                     label: "Hidden"
                     Btn { text: BarCtl.hidden ? "On" : "Off"; on: BarCtl.hidden; onClicked: BarCtl.toggle() }
+                }
+                Setting {
+                    label: "Window title bars"
+                    Btn { text: BarCtl.winbarEnabled ? "On" : "Off"; on: BarCtl.winbarEnabled; onClicked: BarCtl.winbarEnabled = !BarCtl.winbarEnabled }
                 }
                 Rule {}
 

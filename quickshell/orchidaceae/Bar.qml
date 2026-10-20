@@ -32,7 +32,7 @@ Scope {
         anchors { top: true; left: true; right: true }
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
-        exclusiveZone: (BarCtl.hidden || BarCtl.autoHide) ? 0 : Theme.barHeight   // auto-hide peek overlays, never reflows windows
+        exclusiveZone: ((BarCtl.hidden || BarCtl.autoHide) ? 0 : Theme.barHeight) + BarCtl.winbarSpace   // peek overlays, never reflows; + room for WinBar
         mask: Region {}
         implicitWidth: 1
         implicitHeight: 1

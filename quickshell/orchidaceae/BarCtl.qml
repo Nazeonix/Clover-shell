@@ -10,6 +10,8 @@ Singleton {
 
     property bool autoHide: false   // slide the top bar away until the pointer hits the top edge
     property bool hidden: false     // forced off; ignores hover until toggled back
+    property bool winbarEnabled: true // WinBar title bars on/off (toggle in Settings)
+    property int winbarSpace: 0      // extra top space reserved for WinBar title bars (set by WinBar)
     property bool ready: false
 
     readonly property string stateFile:
@@ -17,7 +19,7 @@ Singleton {
 
     function persist() {
         if (!ready) return;
-        store.setText((autoHide ? "1" : "0") + " " + (hidden ? "1" : "0"));
+        store.setText((autoHide ? "1" : "0") + " " + (hidden ? "1" : "0") + " " + (winbarEnabled ? "1" : "0"));
     }
     function toggle() { hidden = !hidden; }
     function show() { hidden = false; }
@@ -33,12 +35,14 @@ Singleton {
                 root.autoHide = parts[0] === "1";
                 root.hidden = parts[1] === "1";
             }
+            if (parts.length >= 3) root.winbarEnabled = parts[2] === "1";
             root.ready = true;
         }
         onLoadFailed: root.ready = true
     }
     onAutoHideChanged: persist()
     onHiddenChanged: persist()
+    onWinbarEnabledChanged: persist()
 
     IpcHandler {
         target: "bar"
