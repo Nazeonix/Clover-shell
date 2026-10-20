@@ -15,6 +15,8 @@ Scope {
 
     readonly property bool enabled: BarCtl.winbarEnabled   // toggled from Settings / IPC
     property int pollMs: 150
+    // no title bar for windows whose class starts with one of these (case-insensitive)
+    property var ignoreClasses: ["steam"]       // also covers steam_app_* games and steamwebhelper
     property string fontName: Theme.fontFamily           // set a pixel font here (e.g. "Terminus", "Silkscreen")
     readonly property int h: 26
     readonly property string minWs: "minimized"      // special workspace used for "minimise"
@@ -49,6 +51,50 @@ Scope {
         }
     }
     function restore() { Hyprland.dispatch('hl.dsp.workspace.toggle_special("' + minWs + '")') }
+
+    function ignored(cls) {
+        const c = (cls || "").toLowerCase();
+        return ignoreClasses.some(p => c.startsWith(p.toLowerCase()));
+    }
+
+    // is window a drawn above window b? floating beats tiled; among floating, most recently focused wins
+    function higher(a, b) {
+        if (!!a.floating !== !!b.floating) return !!a.floating;
+        if (!a.floating) return false;
+        return a.focusHistoryID < b.focusHistoryID;
+    }
+
+    // Largest part of [x0, x1] (global x) of `self`'s bar that is not covered by a window (or the
+    // bar of a window) stacked above it. Layer-shell bars can't interleave with windows, so
+    // covered parts are cut off instead. Returns [a, b] or null.
+    function freeSpan(self, x0, x1, gy) {
+        const list = Hyprland.toplevels.values;
+        const si = self.lastIpcObject;
+        let segs = [[x0, x1]];
+        for (let i = 0; i < list.length; i++) {
+            const o = list[i];
+            if (o === self) continue;
+            const oi = o.lastIpcObject;
+            if (!oi || !oi.at || !oi.size || oi.mapped === false || oi.hidden) continue;
+            if (!o.workspace || !self.workspace || o.workspace.id !== self.workspace.id) continue;
+            if (!higher(oi, si)) continue;
+            const oy = oi.at[1];
+            const top = oy - (ignored(oi.class) ? 0 : h);       // its bar sits above it
+            const bottom = oy + oi.size[1];
+            if (!(top < gy && bottom > gy - h)) continue;       // no vertical overlap with our bar
+            const ox0 = oi.at[0], ox1 = oi.at[0] + oi.size[0];
+            const next = [];
+            for (const sg of segs) {
+                if (ox1 <= sg[0] || ox0 >= sg[1]) { next.push(sg); continue; }
+                if (ox0 - sg[0] > 0) next.push([sg[0], ox0]);
+                if (sg[1] - ox1 > 0) next.push([ox1, sg[1]]);
+            }
+            segs = next;
+        }
+        let best = null;
+        for (const sg of segs) if (!best || sg[1] - sg[0] > best[1] - best[0]) best = sg;
+        return best;
+    }
 
     function iconFor(cls) {
         if (!cls) return "";
@@ -142,7 +188,10 @@ Scope {
             readonly property real ww: live ? ipc.size[0] : 0
             readonly property real vx0: Math.max(0, wx)
             readonly property real vx1: Math.min(monW, wx + ww)
-            readonly property real vw: vx1 - vx0
+            readonly property real monX: monIpc ? monIpc.x : 0
+            readonly property var span: live ? root.freeSpan(t, vx0 + monX, vx1 + monX, ipc.at[1]) : null
+            readonly property real fx0: span ? span[0] - monX : 0
+            readonly property real vw: span ? span[1] - span[0] : 0
             readonly property color fillColor: focused ? Theme.accent : Theme.mix(Theme.background, Theme.foreground, 0.14)
             readonly property color stripeColor: focused ? Theme.mix(Theme.accent, Theme.background, 0.3)
                                                          : Theme.mix(fillColor, Theme.foreground, 0.1)
@@ -150,10 +199,11 @@ Scope {
 
             screen: root.screenFor(mon ? mon.name : "")
             visible: root.enabled && live && !ipc.fullscreen && !!mon
-                     && !!t.workspace && t.workspace.active && vw >= 90
+                     && !!t.workspace && t.workspace.active && !!span && vw >= 90
+                     && !root.ignored(ipc.class)
             anchors { top: true; left: true }
             margins {
-                left: live ? Math.round(vx0) : 0
+                left: live ? Math.round(fx0) : 0
                 top: live ? Math.max(0, Math.round(ipc.at[1] - (monIpc ? monIpc.y : 0)) - root.h) : 0
             }
             implicitWidth: live ? Math.max(1, Math.round(vw)) : 80
