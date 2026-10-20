@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Brightness OSD: half-hidden sun on the right edge, 4 rays = 4 x 25%, each grows with the level. Needs `brightnessctl`.
+// Brightness OSD: half-hidden sun on the right edge, 5 rays = 5 x 20%, each grows with the level. Needs `brightnessctl`.
 //   qs -c orchidaceae ipc call brightness up | down | set <percent> | get
 // Bind your brightness keys to these calls so the OSD shows.
 Scope {
@@ -89,16 +89,16 @@ Scope {
                 border { width: 4; color: Theme.foreground }
             }
 
-            // each ray owns 25%: ray 0 = bottom (0-25%) ... ray 3 = top (75-100%).
+            // each ray owns 20%: ray 0 = bottom (0-20%) ... ray 4 = top (80-100%).
             // It grows outward from the sun as brightness rises and shrinks as it falls.
             Repeater {
-                model: [135, 165, 195, 225]
+                model: [135, 157.5, 180, 202.5, 225]
                 delegate: Rectangle {
                     id: ray
-                    required property int modelData
+                    required property real modelData
                     required property int index
                     readonly property real rad: modelData * Math.PI / 180
-                    readonly property real fill: Math.max(0, Math.min(1, (root.level - index * 0.25) / 0.25))
+                    readonly property real fill: Math.max(0, Math.min(1, (root.level - index * 0.2) / 0.2))
                     readonly property real inner: sun.r * 1.34          // gap between sun and ray
                     property real smoothFill: fill
                     Behavior on smoothFill { NumberAnimation { duration: 320; easing.type: Easing.OutQuint } }

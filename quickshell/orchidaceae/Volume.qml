@@ -15,16 +15,18 @@ Scope {
     readonly property real ratio: muted ? 0 : Math.max(0, Math.min(1, vol))
 
     property bool shown: false
-    property bool active: false         // pill is widened while the volume is changing
+    property real last: 0              // previous volume, to tell up from down
+    property int dir: 1                // +1 last change was up, -1 down
+    property real nudge: 0             // vertical bounce offset of the pill (px)
     property bool armed: false          // ignore the values pipewire reports at startup / device switch
 
     PwObjectTracker { objects: [root.sink] }
 
+    function bounce() { bounceAnim.restart() }
+
     function pop() {
         if (!armed) return;
         shown = true;
-        active = true;
-        activeTimer.restart();
         hideTimer.restart();
     }
     function step(d) {
@@ -39,14 +41,24 @@ Scope {
         pop();
     }
 
-    Timer { id: activeTimer; interval: 550; onTriggered: root.active = false }
+    // the pill hops in the direction of the change, then springs back
+    SequentialAnimation {
+        id: bounceAnim
+        NumberAnimation { target: root; property: "nudge"; to: -root.dir * 10; duration: 80; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "nudge"; to: 0; duration: 650; easing.type: Easing.OutElastic; easing.amplitude: 1.0; easing.period: 0.35 }
+    }
     Timer { id: hideTimer; interval: 1500; onTriggered: root.shown = false }
     Timer { id: armTimer; interval: 1000; running: true; onTriggered: root.armed = true }
     onSinkChanged: { armed = false; armTimer.restart() }
 
     Connections {
         target: root.sink ? root.sink.audio : null
-        function onVolumeChanged() { root.pop() }
+        function onVolumeChanged() {
+            const v = root.vol;
+            if (root.armed && v !== root.last) { root.dir = v > root.last ? 1 : -1; root.bounce(); }
+            root.last = v;
+            root.pop();
+        }
         function onMutedChanged() { root.pop() }
     }
 
@@ -72,17 +84,17 @@ Scope {
         // iOS-style: thin vertical pill on the left edge, fills from the bottom
         Rectangle {
             id: pill
-            readonly property int gap: 32       // distance from the screen border
+            readonly property int gap: Theme.frameThickness + 8   // distance from the screen edge (just inside the frame)
             x: root.shown ? gap : -width - 4
             anchors.verticalCenter: parent.verticalCenter
-            width: root.active ? 11 : 6         // expands while changing, collapses when idle
+            anchors.verticalCenterOffset: root.nudge
+            width: 6
             height: 260
             radius: width / 2
             color: Qt.alpha(Theme.foreground, 0.3)
             opacity: root.shown ? 1 : 0
             clip: true
             Behavior on x { NumberAnimation { duration: 380; easing.type: Easing.OutQuint } }
-            Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutQuint } }
             Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
 
             Rectangle {
@@ -90,7 +102,7 @@ Scope {
                 height: parent.height * root.ratio
                 radius: parent.radius
                 color: Theme.foreground
-                Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutQuint } }
+                Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutBack; easing.overshoot: 2.2 } }
             }
         }
 

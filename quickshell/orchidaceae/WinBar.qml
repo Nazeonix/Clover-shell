@@ -16,7 +16,7 @@ Scope {
     readonly property bool enabled: BarCtl.winbarEnabled   // toggled from Settings / IPC
     property int pollMs: 150
     // no title bar for windows whose class starts with one of these (case-insensitive)
-    property var ignoreClasses: ["steam"]       // also covers steam_app_* games and steamwebhelper
+    property var ignoreClasses: ["steam" ,"firefox" ,"helium-browser"]       // also covers steam_app_* games and steamwebhelper
     property string fontName: Theme.fontFamily           // set a pixel font here (e.g. "Terminus", "Silkscreen")
     readonly property int h: 26
     readonly property string minWs: "minimized"      // special workspace used for "minimise"
