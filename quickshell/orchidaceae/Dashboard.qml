@@ -1,6 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Services.Pipewire
 
 // Drops down under the bar while the pointer is on the top-center of the bar
 // (triggerHovered) or on the panel itself.
@@ -8,7 +11,17 @@ PanelWindow {
     id: win
     property bool triggerHovered: false
     property bool shown: false
-    readonly property bool wanted: triggerHovered || hover.hovered
+    property bool ipcOpen: false
+    readonly property bool wanted: triggerHovered || hover.hovered || ipcOpen
+    onIpcOpenChanged: if (ipcOpen) Qt.callLater(() => keys.forceActiveFocus())
+    WlrLayershell.keyboardFocus: ipcOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    IpcHandler {
+        target: "dashboard"
+        function toggle(): void { win.ipcOpen = !win.ipcOpen }
+        function open(): void { win.ipcOpen = true }
+        function close(): void { win.ipcOpen = false }
+    }
 
     onWantedChanged: {
         if (wanted) { closeTimer.stop(); shown = true; }
@@ -16,12 +29,54 @@ PanelWindow {
     }
     Timer { id: closeTimer; interval: 300; onTriggered: win.shown = false }
 
+    // ---- volume ----
+    readonly property var sink: Pipewire.defaultAudioSink
+    readonly property real vol: sink && sink.audio ? sink.audio.volume : 0
+    readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
+    PwObjectTracker { objects: [win.sink] }
+    function setVol(v) {
+        if (!sink || !sink.audio) return
+        sink.audio.muted = false
+        sink.audio.volume = Math.max(0, Math.min(1, v))
+    }
+    function toggleMute() { if (sink && sink.audio) sink.audio.muted = !sink.audio.muted }
+
+    // ---- brightness (brightnessctl, same curve as Brightness.qml) ----
+    property real bright: 0
+    property real pendingBright: 0
+    property bool hasBacklight: false
+    function setBright(v) {
+        bright = Math.max(0, Math.min(1, v))
+        pendingBright = bright
+        if (!briSet.running) briSet.start()     // throttle while dragging
+    }
+    Timer {
+        id: briSet
+        interval: 60
+        onTriggered: Quickshell.execDetached(["brightnessctl", "-e4", "-n2", "set",
+            Math.max(1, Math.round(win.pendingBright * 100)) + "%"])
+    }
+    Process {
+        id: briRead
+        command: ["brightnessctl", "-e4", "-m"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim().split(",");
+                if (p.length < 5) return;
+                win.hasBacklight = true;
+                if (!briSet.running) win.bright = Math.max(0, Math.min(1, parseFloat(p[3]) / 100));
+            }
+        }
+    }
+    onShownChanged: if (shown) briRead.running = true
+    Component.onCompleted: briRead.running = true
+
     anchors { top: true }
     margins { top: Theme.barHeight }
     exclusionMode: ExclusionMode.Ignore
     readonly property int pad: 0
     implicitWidth: 900
-    implicitHeight: 340
+    implicitHeight: 400
     color: "transparent"
     visible: shown || sheet.y > -sheet.height - pad + 1
     mask: Region { item: sheet }
@@ -30,11 +85,12 @@ PanelWindow {
         id: sheet
         x: win.pad
         width: 900
-        height: 340
+        height: 400
         y: win.shown ? 0 : -height - win.pad
         Behavior on y { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         HoverHandler { id: hover }
+        Item { id: keys; focus: true; Keys.onEscapePressed: win.ipcOpen = false }
 
         // brutalist surface: hard 2px outline, sharp corners; extended upward so the
         // top edge hides under the bar and the box hangs from it
@@ -46,11 +102,96 @@ PanelWindow {
             border { width: 2; color: Theme.foreground }
         }
 
-        RowLayout {
+        ColumnLayout {
             anchors { fill: parent; margins: 18 }
-            spacing: 14
-            Calendar { Layout.preferredWidth: 320; Layout.fillHeight: true }
-            MediaCard { Layout.fillWidth: true; Layout.fillHeight: true }
+            spacing: 12
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 14
+                Calendar { Layout.preferredWidth: 320; Layout.fillHeight: true }
+                MediaCard { Layout.fillWidth: true; Layout.fillHeight: true }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 28
+
+                // volume + brightness: icon, thin line with a vertical tick, percent
+                Repeater {
+                    model: [{ kind: "vol" }, { kind: "bri" }]
+                    delegate: RowLayout {
+                        id: row
+                        required property var modelData
+                        readonly property bool isVol: modelData.kind === "vol"
+                        readonly property real val: isVol ? (win.muted ? 0 : win.vol) : win.bright
+                        readonly property bool dimmed: isVol && win.muted
+                        readonly property real pos: Math.max(0, Math.min(1, val))
+                        function setVal(v) { if (isVol) win.setVol(v); else win.setBright(v); }
+
+                        Layout.fillWidth: true
+                        visible: isVol || win.hasBacklight
+                        spacing: 12
+
+                        Text {
+                            Layout.preferredWidth: 22
+                            horizontalAlignment: Text.AlignHCenter
+                            text: row.isVol ? (win.muted || win.vol === 0 ? "\uf026" : win.vol < 0.5 ? "\uf027" : "\uf028") : "\uf185"
+                            color: row.dimmed ? Theme.alert : Theme.foreground
+                            font { family: Theme.iconFont; pixelSize: 16 }
+                            MouseArea {
+                                anchors { fill: parent; margins: -4 }
+                                onClicked: if (row.isVol) win.toggleMute()
+                            }
+                        }
+
+                        Item {
+                            id: track
+                            Layout.fillWidth: true
+                            implicitHeight: 28
+                            readonly property real hx: Math.max(2, Math.min(width - 2, width * row.pos))
+
+                            Rectangle {     // remaining track
+                                x: track.hx
+                                width: track.width - track.hx
+                                height: 4; radius: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Qt.alpha(Theme.foreground, 0.25)
+                            }
+                            Rectangle {     // filled part
+                                width: track.hx
+                                height: 4; radius: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: row.dimmed ? Theme.muted : Theme.foreground
+                            }
+                            Rectangle {     // tick
+                                x: track.hx - 2
+                                width: 4; height: 20; radius: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Theme.foreground
+                            }
+                            MouseArea {
+                                anchors { fill: parent; topMargin: -4; bottomMargin: -4 }
+                                cursorShape: Qt.PointingHandCursor
+                                onPressed: m => row.setVal(Math.max(0, Math.min(1, m.x / width)))
+                                onPositionChanged: m => { if (pressed) row.setVal(Math.max(0, Math.min(1, m.x / width))); }
+                                onWheel: w => row.setVal(Math.max(0, Math.min(1, row.pos + (w.angleDelta.y > 0 ? 0.05 : -0.05))))
+                            }
+                        }
+
+                        Text {
+                            Layout.preferredWidth: 38
+                            horizontalAlignment: Text.AlignRight
+                            text: Math.round(row.val * 100) + "%"
+                            color: row.dimmed ? Theme.muted : Theme.foreground
+                            font { family: Theme.fontFamily; pixelSize: 13 }
+                        }
+                    }
+                }
+            }
         }
     }
 }

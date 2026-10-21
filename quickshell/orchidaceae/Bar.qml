@@ -146,7 +146,6 @@ Scope {
             }
 
             Item {
-                id: band
                 anchors { left: parent.left; right: parent.right }
                 y: scope.topInset - Theme.barHeight
                 height: Theme.barHeight

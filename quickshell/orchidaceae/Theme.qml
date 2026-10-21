@@ -20,11 +20,9 @@ Singleton {
     // ---- fonts / metrics -------------------------------------------------
     property string fontFamily: "JetBrainsMono Nerd Font"
     property string iconFont: "JetBrainsMono Nerd Font"
-    property int radius: 0
     property int barHeight: 34
-    property int frameThickness: 8
+    property int frameThickness: 0   // left/right/bottom screen frame (was 8); top bar is barHeight
     property int frameRadius: 0
-    property int clay: 26
 
     // ---- palettes --------------------------------------------------------
     readonly property var palettes: ({
@@ -210,12 +208,8 @@ Singleton {
     Behavior on alert      { ColorAnimation { duration: 250 } }
     Behavior on border     { ColorAnimation { duration: 250 } }
 
-    readonly property color barColor: background
-    readonly property color pill: Qt.tint(background, Qt.alpha(foreground, 0.14))
     readonly property color surface:  Qt.tint(background, Qt.alpha(foreground, 0.08))
     readonly property color muted:    Qt.alpha(foreground, 0.55)
-    readonly property color shadowDark:  Qt.darker(background, isLight ? 1.28 : 2.0)
-    readonly property color shadowLight: Qt.lighter(background, isLight ? 1.5 : 1.35)
 
     function persist() {
         if (!ready) return;
@@ -245,9 +239,6 @@ Singleton {
         family = f; variant = v;
     }
     function nextFamily() { family = families[(families.indexOf(family) + 1) % families.length]; }
-    function prevFamily() { family = families[(families.indexOf(family) + families.length - 1) % families.length]; }
-    function nextVariant() { variant = variants[(variants.indexOf(variant) + 1) % variants.length]; }
-    function prevVariant() { variant = variants[(variants.indexOf(variant) + variants.length - 1) % variants.length]; }
     function toggleMode() { variant = isLight ? "dark" : "light"; }
 
     IpcHandler {

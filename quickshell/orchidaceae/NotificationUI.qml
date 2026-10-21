@@ -294,7 +294,7 @@ Scope {
                             color: Notifs.dnd ? Theme.background : Theme.foreground
                             font { family: Theme.iconFont; pixelSize: 14 }
                         }
-                        MouseArea { id: dndMa; anchors.fill: parent; onClicked: Notifs.dnd = !Notifs.dnd }
+                        MouseArea { anchors.fill: parent; onClicked: Notifs.dnd = !Notifs.dnd }
                     }
                     // clear all
                     Rectangle {

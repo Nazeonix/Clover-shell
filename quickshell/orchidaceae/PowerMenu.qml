@@ -1,13 +1,25 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
 
 // Slides in from the right edge: power off, reboot, sleep, hibernate.
 PanelWindow {
     id: win
     property bool triggerHovered: false
     property bool shown: false
-    readonly property bool wanted: triggerHovered || hover.hovered
+    property bool ipcOpen: false
+    readonly property bool wanted: triggerHovered || hover.hovered || ipcOpen
+    onIpcOpenChanged: if (ipcOpen) Qt.callLater(() => keys.forceActiveFocus())
+    WlrLayershell.keyboardFocus: ipcOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    IpcHandler {
+        target: "powermenu"
+        function toggle(): void { win.ipcOpen = !win.ipcOpen }
+        function open(): void { win.ipcOpen = true }
+        function close(): void { win.ipcOpen = false }
+    }
 
     onWantedChanged: {
         if (wanted) { closeTimer.stop(); shown = true; }
@@ -34,6 +46,7 @@ PanelWindow {
         Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         HoverHandler { id: hover }
+        Item { id: keys; focus: true; Keys.onEscapePressed: win.ipcOpen = false }
 
         // brutalist surface: hard 2px outline, sharp corners; extended to the right so
         // the right edge hides under the frame and the box is attached to it

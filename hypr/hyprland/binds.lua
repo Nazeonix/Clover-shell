@@ -9,6 +9,8 @@ local wall = "qs -c orchidaceae ipc call wallpaper picker"
 local them = "qs -c orchidaceae ipc call theme toggle"
 local next = "qs -c orchidaceae ipc call theme next"
 local hide = "qs -c orchidaceae ipc call bar toggleAuto"
+local dashboard = "qs -c orchidaceae ipc call dashboard toggle"
+local powermenu = "qs -c orchidaceae ipc call powermenu toggle"
 
 local colStep  = "0.1"  -- column width change per keypress (Super + / -)
 local fineStep = "0.05" -- fine step (Super + Ctrl + arrows, resize submap)
@@ -25,6 +27,8 @@ hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2
 
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))                  -- Explorer (file manager)
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))                     -- Launcher
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(dashboard))                    -- Dashboard
+hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd(powermenu))               -- Power menu
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())                        -- Pseudo-tile
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(wall))                         -- Wallpaper picker
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(them))                         -- Theme toggle

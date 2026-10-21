@@ -115,7 +115,6 @@ Scope {
     }
 
     PanelWindow {
-        id: win
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"

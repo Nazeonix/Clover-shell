@@ -1,13 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 import Quickshell.Services.Mpris
 
 Rectangle {
     id: root
     color: "transparent"
-    border.width: 0
 
     // Prefer the playing player; otherwise the first available one
     readonly property var player: {
@@ -108,7 +106,6 @@ Rectangle {
             Layout.preferredHeight: 200
             Layout.alignment: Qt.AlignVCenter
             color: Theme.surface
-            border.width: 0
             clip: true
 
             Image {
@@ -214,12 +211,12 @@ Rectangle {
                     anchors.fill: parent
                     enabled: root.hasPlayer && root.player.canSeek && root.len > 0
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: m => root.seekTo(m.x / width)
                     // drag to seek
                     property bool dragging: false
                     onPressed: m => { dragging = true; root.seekTo(m.x / width) }
                     onPositionChanged: m => { if (dragging) root.seekTo(m.x / width) }
                     onReleased: dragging = false
+                    onCanceled: dragging = false
                 }
             }
 
@@ -248,7 +245,6 @@ Rectangle {
                 Rectangle {
                     implicitWidth: 44
                     implicitHeight: 44
-                    border.width: 0
                     color: prevMa.containsMouse && prevMa.enabled
                            ? Qt.alpha(Theme.foreground, 0.12) : "transparent"
                     opacity: root.hasPlayer && root.player.canGoPrevious ? 1 : 0.35
@@ -271,7 +267,6 @@ Rectangle {
                 Rectangle {
                     implicitWidth: 52
                     implicitHeight: 52
-                    border.width: 0
                     color: Theme.accent
                     opacity: root.hasPlayer && root.player.canTogglePlaying ? 1 : 0.4
                     Text {
@@ -291,7 +286,6 @@ Rectangle {
                 Rectangle {
                     implicitWidth: 44
                     implicitHeight: 44
-                    border.width: 0
                     color: nextMa.containsMouse && nextMa.enabled
                            ? Qt.alpha(Theme.foreground, 0.12) : "transparent"
                     opacity: root.hasPlayer && root.player.canGoNext ? 1 : 0.35

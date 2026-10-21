@@ -190,8 +190,7 @@ RowLayout {
         Text {
             id: btIcon
             text: "\uf293"
-            color: root.btOpen ? Theme.accent
-                 : root.btConnected ? Theme.accent
+            color: root.btOpen || root.btConnected ? Theme.accent
                  : root.btOn ? Theme.foreground : Theme.muted
             font { family: Theme.iconFont; pixelSize: 15 }
         }

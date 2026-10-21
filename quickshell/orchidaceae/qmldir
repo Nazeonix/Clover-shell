@@ -2,19 +2,14 @@ singleton Theme Theme.qml
 singleton Launcher Launcher.qml
 singleton BarCtl BarCtl.qml
 Bar Bar.qml
-Pill Pill.qml
 Workspaces Workspaces.qml
 Clock Clock.qml
-Media Media.qml
-Battery Battery.qml
 Volume Volume.qml
 Tray Tray.qml
-ThemeSwitcher ThemeSwitcher.qml
 ActiveWindow ActiveWindow.qml
 StatusIcons StatusIcons.qml
 WifiMenu WifiMenu.qml
 BtMenu BtMenu.qml
-PowerButton PowerButton.qml
 Dashboard Dashboard.qml
 Calendar Calendar.qml
 MediaCard MediaCard.qml

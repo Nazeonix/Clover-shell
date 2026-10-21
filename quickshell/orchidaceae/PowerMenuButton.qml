@@ -11,7 +11,6 @@ Rectangle {
     implicitWidth: 80
     implicitHeight: 74
     color: ma.containsMouse ? tone : "transparent"
-    border.width: 0
     Column {
         anchors.centerIn: parent
         spacing: 6

@@ -16,13 +16,30 @@ Scope {
     readonly property bool enabled: BarCtl.winbarEnabled   // toggled from Settings / IPC
     property int pollMs: 150
     // no title bar for windows whose class starts with one of these (case-insensitive)
-    property var ignoreClasses: ["steam" ,"firefox" ,"helium-browser"]       // also covers steam_app_* games and steamwebhelper
+    property var ignoreClasses: [
+        "steam",                                   // also covers steam_app_* games and steamwebhelper
+        "firefox", "org.mozilla.firefox", "librewolf", "floorp", "zen", "helium",
+        "chromium", "google-chrome", "brave", "vivaldi",
+        "vesktop", "equibop", "goofcord", "discord"
+    ]
     property string fontName: Theme.fontFamily           // set a pixel font here (e.g. "Terminus", "Silkscreen")
     readonly property int h: 26
     readonly property string minWs: "minimized"      // special workspace used for "minimise"
 
-    // reserve room under the shell bar so title bars never overlap it
-    Binding { target: BarCtl; property: "winbarSpace"; value: root.enabled ? root.h : 0 }
+    // a title bar is currently drawn (visible, non-fullscreen, non-ignored window on an active workspace)
+    readonly property bool needSpace: {
+        const list = Hyprland.toplevels.values;
+        for (let i = 0; i < list.length; i++) {
+            const o = list[i], oi = o.lastIpcObject;
+            if (!oi || !oi.at || !oi.size || oi.mapped === false || oi.hidden || oi.fullscreen) continue;
+            if (!o.workspace || !o.workspace.active || ignored(oi.class)) continue;
+            return true;
+        }
+        return false;
+    }
+
+    // reserve room under the shell bar so title bars never overlap it (none when only ignored apps are shown)
+    Binding { target: BarCtl; property: "winbarSpace"; value: root.enabled && root.needSpace ? root.h : 0 }
 
     // 7x7 pixel glyphs, drawn 2px per cell
     readonly property var gMin:   [".......", ".......", ".......", ".......", ".......", ".......", "#######"]
@@ -216,7 +233,6 @@ Scope {
             PixelBox { anchors.fill: parent; fill: bar.fillColor; squareBottom: true }
 
             Item {
-                id: row
                 anchors { fill: parent; leftMargin: 8; rightMargin: 4; topMargin: 2; bottomMargin: 2 }
 
                 IconImage {

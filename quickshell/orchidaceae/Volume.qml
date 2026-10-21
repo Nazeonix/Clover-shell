@@ -105,13 +105,5 @@ Scope {
                 Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutBack; easing.overshoot: 2.2 } }
             }
         }
-
-//        Text {
-//            anchors { left: pill.right; leftMargin: 8; verticalCenter: pill.verticalCenter }
-//            opacity: pill.opacity
-//            text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-//            color: root.muted ? Theme.alert : Theme.foreground
-//            font { family: Theme.fontFamily; pixelSize: 13; bold: true }
-//        }
     }
 }

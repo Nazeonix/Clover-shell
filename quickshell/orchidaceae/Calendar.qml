@@ -5,7 +5,6 @@ import Quickshell
 Rectangle {
     id: root
     color: "transparent"
-    border.width: 0
 
     SystemClock { id: clk; precision: SystemClock.Minutes }
 
@@ -39,7 +38,6 @@ Rectangle {
                     required property var modelData
                     implicitWidth: 30; implicitHeight: 30
                     color: nav.containsMouse ? Theme.surface : "transparent"
-                    border.width: 0
                     Text {
                         anchors.centerIn: parent
                         text: modelData.g
