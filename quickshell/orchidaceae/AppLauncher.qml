@@ -86,7 +86,7 @@ PanelWindow {
     
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: shown || card.opacity > 0.01
+    visible: shown || card.y < win.height
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
@@ -102,19 +102,23 @@ PanelWindow {
         }
     }
 
-    // centered card: search + application grid
+    // centered card: search + application grid; jumps up from the bottom edge (overshoots, settles)
     Rectangle {
         id: card
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: win.shown ? Math.round((parent.height - height) / 2) : parent.height
         width: Math.min(960, parent.width - 40)
         height: Math.min(col.implicitHeight + 44, parent.height - 80)
         radius: 8
         color: Theme.background
         border { width: 2; color: Theme.foreground }
-        opacity: win.shown ? 1 : 0
-        scale: win.shown ? 1 : 0.97
-        Behavior on opacity { NumberAnimation { duration: 140 } }
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        Behavior on y {
+            NumberAnimation {
+                duration: win.shown ? 480 : 220
+                easing.type: win.shown ? Easing.OutBack : Easing.InCubic
+                easing.overshoot: 1.4
+            }
+        }
 
         // block clicks from reaching backdrop
         MouseArea { anchors.fill: parent }

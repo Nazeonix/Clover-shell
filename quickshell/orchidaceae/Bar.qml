@@ -154,10 +154,52 @@ Scope {
                 RowLayout {
                     anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
                     spacing: 12
-                    Text {
-                        text: "\uf303"
-                        color: Theme.foreground
-                        font { family: Theme.iconFont; pixelSize: 19 }
+                    // logo: 3-leaf clover, pixel art (1 char = 1 px; bump `pix` to scale up)
+                    Canvas {
+                        id: logo
+                        readonly property int pix: 1
+                        readonly property var bits: [
+                            ".......####.###.......",
+                            "......##########......",
+                            ".....############.....",
+                            ".....############.....",
+                            "......###########.....",
+                            ".......#########......",
+                            ".......#########......",
+                            ".####...#######..####.",
+                            ".#####...#####..#####.",
+                            "######...#####..######",
+                            "########.#############",
+                            "######################",
+                            "######################",
+                            "######################",
+                            "######################",
+                            "######################",
+                            "#######...###...######",
+                            ".#####....##.....####.",
+                            "..###.....##......##..",
+                            "...........#..........",
+                            "...........#..........",
+                            "..........##..........",
+                            "..........###.........",
+                            "..........###........."
+                        ]
+                        width: bits[0].length * pix
+                        height: bits.length * pix
+                        Layout.preferredWidth: width
+                        Layout.preferredHeight: height
+                        onPaint: {
+                            const ctx = getContext("2d");
+                            ctx.clearRect(0, 0, width, height);
+                            ctx.fillStyle = Theme.foreground;
+                            for (let y = 0; y < bits.length; y++)
+                                for (let x = 0; x < bits[y].length; x++)
+                                    if (bits[y][x] === "#") ctx.fillRect(x * pix, y * pix, pix, pix);
+                        }
+                        Connections {
+                            target: Theme
+                            function onForegroundChanged() { logo.requestPaint(); }
+                        }
                         MouseArea {
                             anchors { fill: parent; margins: -6 }
                             onClicked: Launcher.toggle()

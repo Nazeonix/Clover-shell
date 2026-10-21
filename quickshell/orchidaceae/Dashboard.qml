@@ -153,17 +153,18 @@ PanelWindow {
                             Layout.fillWidth: true
                             implicitHeight: 28
                             readonly property real hx: Math.max(2, Math.min(width - 2, width * row.pos))
+                            readonly property int thick: 8    // line thickness (same for volume + brightness)
 
                             Rectangle {     // remaining track
                                 x: track.hx
                                 width: track.width - track.hx
-                                height: 4; radius: 2
+                                height: track.thick; radius: 2
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: Qt.alpha(Theme.foreground, 0.25)
                             }
                             Rectangle {     // filled part
                                 width: track.hx
-                                height: 4; radius: 2
+                                height: track.thick; radius: 2
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: row.dimmed ? Theme.muted : Theme.foreground
                             }
