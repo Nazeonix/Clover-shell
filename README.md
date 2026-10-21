@@ -109,7 +109,7 @@ hyprland quickshell kitty fish sddm
 
 3. Install dependencies (EndeavourOS / Arch):
    ```bash
-   sudo pacman -S quickshell ttf-jetbrains-mono-nerd
+   sudo pacman -S quickshell ttf-jetbrains-mono-nerd hyprland satty grim slurp xdg-desktop-portal-hyprland nwg-look papirus-icon-theme nautilus
    ```
 
 4. Set wallpaper directory (default expected):
