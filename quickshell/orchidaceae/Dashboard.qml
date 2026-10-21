@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -74,8 +75,8 @@ PanelWindow {
     anchors { top: true }
     margins { top: Theme.barHeight }
     exclusionMode: ExclusionMode.Ignore
-    readonly property int pad: 0
-    implicitWidth: 900
+    readonly property int pad: 16        // room for the top fillets left/right of the sheet
+    implicitWidth: 900 + pad * 2
     implicitHeight: 400
     color: "transparent"
     visible: shown || sheet.y > -sheet.height - pad + 1
@@ -92,14 +93,41 @@ PanelWindow {
         HoverHandler { id: hover }
         Item { id: keys; focus: true; Keys.onEscapePressed: win.ipcOpen = false }
 
-        // brutalist surface: hard 2px outline, sharp corners; extended upward so the
-        // top edge hides under the bar and the box hangs from it
-        Rectangle {
-            y: -40
-            width: parent.width
-            height: parent.height + 40
-            color: Theme.background
-            border { width: 2; color: Theme.foreground }
+        // surface: 2px outline; bottom corners convex, top joins the bar with concave fillets
+        Shape {
+            id: surf
+            x: -win.pad; y: -40
+            width: sheet.width + win.pad * 2
+            height: sheet.height + 40
+            preferredRendererType: Shape.CurveRenderer
+            readonly property real a: win.pad      // x offset of the sheet inside the shape
+            readonly property real b: 40           // y offset
+            readonly property real sw: sheet.width
+            readonly property real sh: sheet.height
+            readonly property real cr: 16           // bottom corner radius
+            readonly property real fr: win.pad      // top fillet radius
+
+            ShapePath {
+                fillColor: Theme.background
+                strokeColor: Theme.foreground
+                strokeWidth: 2
+                joinStyle: ShapePath.RoundJoin
+                startX: surf.a - surf.fr; startY: surf.b
+                PathArc  { x: surf.a; y: surf.b + surf.fr
+                           radiusX: surf.fr; radiusY: surf.fr; direction: PathArc.Clockwise }
+                PathLine { x: surf.a; y: surf.b + surf.sh - surf.cr }
+                PathArc  { x: surf.a + surf.cr; y: surf.b + surf.sh
+                           radiusX: surf.cr; radiusY: surf.cr; direction: PathArc.Counterclockwise }
+                PathLine { x: surf.a + surf.sw - surf.cr; y: surf.b + surf.sh }
+                PathArc  { x: surf.a + surf.sw; y: surf.b + surf.sh - surf.cr
+                           radiusX: surf.cr; radiusY: surf.cr; direction: PathArc.Counterclockwise }
+                PathLine { x: surf.a + surf.sw; y: surf.b + surf.fr }
+                PathArc  { x: surf.a + surf.sw + surf.fr; y: surf.b
+                           radiusX: surf.fr; radiusY: surf.fr; direction: PathArc.Clockwise }
+                PathLine { x: surf.a + surf.sw + surf.fr; y: 0 }
+                PathLine { x: surf.a - surf.fr; y: 0 }
+                PathLine { x: surf.a - surf.fr; y: surf.b }
+            }
         }
 
         ColumnLayout {

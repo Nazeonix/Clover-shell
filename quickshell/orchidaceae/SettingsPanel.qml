@@ -29,6 +29,7 @@ Singleton {
         signal clicked()
         implicitWidth: lbl.implicitWidth + 24
         implicitHeight: 30
+        radius: 8
         color: on ? Theme.accent
              : ma.containsMouse ? (danger ? Theme.alert : Theme.foreground) : "transparent"
         border { width: 2; color: Theme.foreground }
@@ -87,6 +88,7 @@ Singleton {
             anchors.centerIn: parent
             width: Math.min(700, parent.width - 80)
             height: Math.min(col.implicitHeight + 44, parent.height - 80)
+            radius: 16
             color: Theme.background
             border { width: 2; color: Theme.foreground }
             opacity: root.open ? 1 : 0

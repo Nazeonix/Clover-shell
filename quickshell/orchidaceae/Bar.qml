@@ -14,6 +14,10 @@ Scope {
     property bool edgeHot: false
     readonly property bool hot: bandHot || edgeHot
     readonly property bool barOpen: !BarCtl.hidden && (!BarCtl.autoHide || peek)
+    // module chips (squircle-ish rounded boxes) + bar bottom-corner radius
+    readonly property color chip: Qt.tint(Theme.background, Qt.alpha(Theme.foreground, 0.09))
+    readonly property int chipR: 9
+    readonly property int slabR: 16
     property real topInset: barOpen ? Theme.barHeight : 0
     Behavior on topInset { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
     // left/right/bottom outline follows the bar: gone when the bar is hidden / auto-hidden
@@ -107,8 +111,33 @@ Scope {
             readonly property real fb: scope.frameT
             readonly property real r: Theme.frameRadius
 
+            // bar slab: hugs the top/left/right edges, rounded bottom corners
             Shape {
                 anchors.fill: parent
+                visible: root.ft > 0.5
+                preferredRendererType: Shape.CurveRenderer
+
+                ShapePath {
+                    id: slab
+                    readonly property real rr: Math.min(scope.slabR, root.ft)
+                    fillColor: Theme.background
+                    strokeWidth: -1
+                    startX: 0; startY: 0
+                    PathLine { x: root.width; y: 0 }
+                    PathLine { x: root.width; y: root.ft - slab.rr }
+                    PathArc  { x: root.width - slab.rr; y: root.ft
+                               radiusX: slab.rr; radiusY: slab.rr; direction: PathArc.Clockwise }
+                    PathLine { x: slab.rr; y: root.ft }
+                    PathArc  { x: 0; y: root.ft - slab.rr
+                               radiusX: slab.rr; radiusY: slab.rr; direction: PathArc.Clockwise }
+                    PathLine { x: 0; y: 0 }
+                }
+            }
+
+            // optional full frame (only when Theme.frameThickness > 0)
+            Shape {
+                anchors.fill: parent
+                visible: scope.frameT > 0.5
                 preferredRendererType: Shape.CurveRenderer
 
                 ShapePath {
@@ -152,61 +181,70 @@ Scope {
                 HoverHandler { onHoveredChanged: scope.bandHot = hovered }
 
                 RowLayout {
-                    anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
-                    spacing: 12
-                    // logo: 3-leaf clover, pixel art (1 char = 1 px; bump `pix` to scale up)
-                    Canvas {
-                        id: logo
-                        readonly property int pix: 1
-                        readonly property var bits: [
-                            ".......####.###.......",
-                            "......##########......",
-                            ".....############.....",
-                            ".....############.....",
-                            "......###########.....",
-                            ".......#########......",
-                            ".......#########......",
-                            ".####...#######..####.",
-                            ".#####...#####..#####.",
-                            "######...#####..######",
-                            "########.#############",
-                            "######################",
-                            "######################",
-                            "######################",
-                            "######################",
-                            "######################",
-                            "#######...###...######",
-                            ".#####....##.....####.",
-                            "..###.....##......##..",
-                            "...........#..........",
-                            "...........#..........",
-                            "..........##..........",
-                            "..........###.........",
-                            "..........###........."
-                        ]
-                        width: bits[0].length * pix
-                        height: bits.length * pix
-                        Layout.preferredWidth: width
-                        Layout.preferredHeight: height
-                        onPaint: {
-                            const ctx = getContext("2d");
-                            ctx.clearRect(0, 0, width, height);
-                            ctx.fillStyle = Theme.foreground;
-                            for (let y = 0; y < bits.length; y++)
-                                for (let x = 0; x < bits[y].length; x++)
-                                    if (bits[y][x] === "#") ctx.fillRect(x * pix, y * pix, pix, pix);
+                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    spacing: 8
+
+                    Rectangle {     // logo: 3-leaf clover, pixel art (1 char = 1 px; bump `pix` to scale up)
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: logo.width + 14
+                        Layout.preferredHeight: 28
+                        Canvas {
+                            id: logo
+                            anchors.centerIn: parent
+                            readonly property int pix: 1
+                            readonly property var bits: [
+                                ".......####.###.......",
+                                "......##########......",
+                                ".....############.....",
+                                ".....############.....",
+                                "......###########.....",
+                                ".......#########......",
+                                ".......#########......",
+                                ".####...#######..####.",
+                                ".#####...#####..#####.",
+                                "######...#####..######",
+                                "########.#############",
+                                "######################",
+                                "######################",
+                                "######################",
+                                "######################",
+                                "######################",
+                                "#######...###...######",
+                                ".#####....##.....####.",
+                                "..###.....##......##..",
+                                "...........#..........",
+                                "...........#..........",
+                                "..........##..........",
+                                "..........###.........",
+                                "..........###........."
+                            ]
+                            width: bits[0].length * pix
+                            height: bits.length * pix
+                            onPaint: {
+                                const ctx = getContext("2d");
+                                ctx.clearRect(0, 0, width, height);
+                                ctx.fillStyle = Theme.foreground;
+                                for (let y = 0; y < bits.length; y++)
+                                    for (let x = 0; x < bits[y].length; x++)
+                                        if (bits[y][x] === "#") ctx.fillRect(x * pix, y * pix, pix, pix);
+                            }
+                            Connections {
+                                target: Theme
+                                function onForegroundChanged() { logo.requestPaint(); }
+                            }
                         }
-                        Connections {
-                            target: Theme
-                            function onForegroundChanged() { logo.requestPaint(); }
-                        }
-                        MouseArea {
-                            anchors { fill: parent; margins: -6 }
-                            onClicked: Launcher.toggle()
-                        }
+                        MouseArea { anchors.fill: parent; onClicked: Launcher.toggle() }
                     }
-                    Workspaces {
-                        screenName: scope.modelData ? scope.modelData.name : ""
+                    Rectangle {
+                        visible: ws.items.length > 0
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: ws.implicitWidth + 12
+                        Layout.preferredHeight: 28
+                        Workspaces {
+                            id: ws
+                            anchors.centerIn: parent
+                            screenName: scope.modelData ? scope.modelData.name : ""
+                        }
                     }
                 }
 
@@ -219,30 +257,55 @@ Scope {
 
                 RowLayout {
                     anchors.centerIn: parent
-                    spacing: 16
-                    ActiveWindow {}
-                    Clock {}
+                    spacing: 8
+                    Rectangle {
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: aw.implicitWidth + 24
+                        Layout.preferredHeight: 28
+                        ActiveWindow { id: aw; anchors.centerIn: parent }
+                    }
+                    Rectangle {
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: clk.implicitWidth + 24
+                        Layout.preferredHeight: 28
+                        Clock { id: clk; anchors.centerIn: parent }
+                    }
                 }
 
                 RowLayout {
-                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
-                    spacing: 16
-                    Tray {}
-                    StatusIcons {
-                        id: statusIcons
-                        wifiOpen: wifiMenu.open
-                        btOpen: btMenu.open
-                        onWifiClicked: { btMenu.open = false; wifiMenu.toggle(); }
-                        onBtClicked: { wifiMenu.open = false; btMenu.toggle(); }
+                    anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                    spacing: 8
+                    Rectangle {
+                        visible: tray.implicitWidth > 0
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: tray.implicitWidth + 20
+                        Layout.preferredHeight: 28
+                        Tray { id: tray; anchors.centerIn: parent }
                     }
-                    Text {
-                        text: "\uf013"
-                        color: SettingsPanel.open ? Theme.accent : Theme.foreground
-                        font { family: Theme.iconFont; pixelSize: 15 }
-                        MouseArea {
-                            anchors { fill: parent; margins: -4 }
-                            onClicked: SettingsPanel.toggle()
+                    Rectangle {
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: statusIcons.implicitWidth + 24
+                        Layout.preferredHeight: 28
+                        StatusIcons {
+                            id: statusIcons
+                            anchors.centerIn: parent
+                            wifiOpen: wifiMenu.open
+                            btOpen: btMenu.open
+                            onWifiClicked: { btMenu.open = false; wifiMenu.toggle(); }
+                            onBtClicked: { wifiMenu.open = false; btMenu.toggle(); }
                         }
+                    }
+                    Rectangle {
+                        radius: scope.chipR; color: scope.chip
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\uf013"
+                            color: SettingsPanel.open ? Theme.accent : Theme.foreground
+                            font { family: Theme.iconFont; pixelSize: 15 }
+                        }
+                        MouseArea { anchors.fill: parent; onClicked: SettingsPanel.toggle() }
                     }
                 }
             }

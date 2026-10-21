@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Numbered cells; active one is a solid accent block. Hyprland native, niri via `niri msg`.
+// Numbered cells; active one is just bold (no highlight block). Hyprland native, niri via `niri msg`.
 Row {
     id: root
     property string screenName: ""
@@ -47,15 +47,10 @@ Row {
             width: 24
             height: 22
 
-            Rectangle {
-                anchors.fill: parent
-                color: modelData.active ? Theme.accent : "transparent"
-            }
             Text {
                 anchors.centerIn: parent
                 text: modelData.key
-                color: modelData.active ? Theme.background
-                     : modelData.occupied ? Theme.foreground : Theme.muted
+                color: modelData.active || modelData.occupied ? Theme.foreground : Theme.muted
                 font { family: Theme.fontFamily; pixelSize: 13; bold: modelData.active }
             }
             MouseArea { anchors.fill: parent; onClicked: root.go(modelData.key) }
