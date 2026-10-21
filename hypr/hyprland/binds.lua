@@ -2,7 +2,7 @@
 
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local terminal = "kitty"
-local fileManager = "thunar"
+local fileManager = "nautilus"
 local menu = "qs -c orchidaceae ipc call launcher toggle"
 local lock = "qs -c lock"
 local wall = "qs -c orchidaceae ipc call wallpaper picker"

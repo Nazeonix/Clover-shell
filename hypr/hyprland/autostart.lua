@@ -1,10 +1,11 @@
 -- Add/remove commands here; each runs once at compositor start.
 local cmds = {
-    "awww-daemon",
+    "gsettings set org.gnome.nautilus.preferences default-folder-viewer 'list-view'",
     "qs -c orchidaceae",
     "systemctl --user start hyprpolkitagent",
     "wl-paste --type text --watch cliphist store",
     "wl-paste --type image --watch cliphist store",
+    "gsettings set org.gnome.desktop.wm.preferences button-layout ':'",
 }
 
 hl.on("hyprland.start", function()
