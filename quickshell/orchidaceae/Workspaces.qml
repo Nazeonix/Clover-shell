@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Numbered cells; active one is just bold (no highlight block). Hyprland native, niri via `niri msg`.
+// Numbered cells; chosen = rounded square, has windows = accent bold number, empty = dim. Hyprland native, niri via `niri msg`.
 Row {
     id: root
     property string screenName: ""
@@ -13,14 +13,29 @@ Row {
     readonly property bool isNiri: !!Quickshell.env("NIRI_SOCKET")
     property var niriWs: []
 
+    // true when the workspace really has a window (not just "the workspace exists")
+    function hyprOcc(id, ws) {
+        try {
+            const t = Hyprland.toplevels.values;
+            for (let j = 0; j < t.length; j++) {
+                const w = t[j].workspace;
+                if (w && w.id === id) return true;
+            }
+            return false;
+        } catch (e) {}
+        try {
+            if (ws && ws.lastIpcObject && ws.lastIpcObject.windows !== undefined) return ws.lastIpcObject.windows > 0;
+        } catch (e) {}
+        return !!ws;
+    }
     function hyprItems() {
         const out = [];
         const vals = Hyprland.workspaces.values;
         const fw = Hyprland.focusedWorkspace;
         for (let i = 1; i <= count; i++) {
-            let found = false;
-            for (let j = 0; j < vals.length; j++) if (vals[j].id === i) found = true;
-            out.push({ key: i, active: !!fw && fw.id === i, occupied: found });
+            let ws = null;
+            for (let j = 0; j < vals.length; j++) if (vals[j].id === i) ws = vals[j];
+            out.push({ key: i, active: !!fw && fw.id === i, occupied: hyprOcc(i, ws) });
         }
         return out;
     }
@@ -47,11 +62,18 @@ Row {
             width: 24
             height: 22
 
+            Rectangle {     // chosen workspace: rounded square
+                anchors.centerIn: parent
+                width: 22; height: 20
+                radius: 7
+                color: modelData.active ? Theme.accent : "transparent"
+            }
             Text {
                 anchors.centerIn: parent
                 text: modelData.key
-                color: modelData.active || modelData.occupied ? Theme.foreground : Theme.muted
-                font { family: Theme.fontFamily; pixelSize: 13; bold: modelData.active }
+                color: modelData.active ? Theme.background
+                     : modelData.occupied ? Theme.accent : Theme.muted   // accent = has windows open
+                font { family: Theme.fontFamily; pixelSize: 13; bold: modelData.active || modelData.occupied }
             }
             MouseArea { anchors.fill: parent; onClicked: root.go(modelData.key) }
         }
@@ -69,5 +91,8 @@ Row {
         command: ["niri", "msg", "--json", "event-stream"]
         stdout: SplitParser { onRead: line => { if (!query.running) query.running = true; } }
     }
-    Component.onCompleted: if (isNiri) query.running = true
+    Component.onCompleted: {
+        if (isNiri) query.running = true;
+        try { Hyprland.refreshToplevels(); Hyprland.refreshWorkspaces(); } catch (e) {}
+    }
 }

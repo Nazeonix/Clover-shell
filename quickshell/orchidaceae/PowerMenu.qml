@@ -12,8 +12,14 @@ PanelWindow {
     property bool shown: false
     property bool ipcOpen: false
     readonly property bool wanted: triggerHovered || hover.hovered || ipcOpen
+    // keyboard: Up/Down (or k/j) move, Enter runs, Esc closes. Active via the IPC/keybind
+    // open, or while the pointer is over the menu.
+    property int sel: 0
+    property bool navActive: false
+    readonly property var buttons: [bPoweroff, bReboot, bSleep, bHibernate]
     onIpcOpenChanged: if (ipcOpen) Qt.callLater(() => keys.forceActiveFocus())
-    WlrLayershell.keyboardFocus: ipcOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    onShownChanged: { navActive = false; sel = 0; if (shown) Qt.callLater(() => keys.forceActiveFocus()); }
+    WlrLayershell.keyboardFocus: (ipcOpen || hover.hovered) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     IpcHandler {
         target: "powermenu"
@@ -48,7 +54,28 @@ PanelWindow {
         Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         HoverHandler { id: hover }
-        Item { id: keys; focus: true; Keys.onEscapePressed: win.ipcOpen = false }
+        Item {
+            id: keys
+            focus: true
+            Keys.onPressed: event => {
+                const n = win.buttons.length;
+                if (event.key === Qt.Key_Escape) {
+                    win.ipcOpen = false; event.accepted = true;
+                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+                    if (!win.navActive) { win.navActive = true; win.sel = 0; }
+                    else win.sel = (win.sel + 1) % n;
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+                    if (!win.navActive) { win.navActive = true; win.sel = n - 1; }
+                    else win.sel = (win.sel + n - 1) % n;
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    // only when a selection is visible, so a stray Enter can't power off
+                    if (win.navActive) win.buttons[win.sel].activate();
+                    event.accepted = true;
+                }
+            }
+        }
 
         // surface: 2px outline; left corners convex, top/bottom flare into the screen edge
         Shape {
@@ -91,19 +118,35 @@ PanelWindow {
             spacing: 10
 
             PowerMenuButton {
+                id: bPoweroff
+                selected: win.navActive && win.sel === 0
+                navActive: win.navActive
+                onMouseMoved: { win.navActive = false; win.sel = 0 }
                 glyph: "\uf011"; label: "Power off"; tone: Theme.alert
                 cmd: ["systemctl", "poweroff"]
             }
             PowerMenuButton {
+                id: bReboot
+                selected: win.navActive && win.sel === 1
+                navActive: win.navActive
+                onMouseMoved: { win.navActive = false; win.sel = 1 }
                 glyph: "\uf021"; label: "Reboot"; tone: Theme.secondary
                 cmd: ["systemctl", "reboot"]
             }
 
             PowerMenuButton {
+                id: bSleep
+                selected: win.navActive && win.sel === 2
+                navActive: win.navActive
+                onMouseMoved: { win.navActive = false; win.sel = 2 }
                 glyph: "\uf186"; label: "Sleep"; tone: Theme.accent
                 cmd: ["systemctl", "suspend"]
             }
             PowerMenuButton {
+                id: bHibernate
+                selected: win.navActive && win.sel === 3
+                navActive: win.navActive
+                onMouseMoved: { win.navActive = false; win.sel = 3 }
                 glyph: "\uf2dc"; label: "Hibernate"; tone: Theme.accent
                 cmd: ["systemctl", "hibernate"]
             }

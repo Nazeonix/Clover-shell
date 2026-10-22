@@ -256,6 +256,7 @@ PanelWindow {
         signal clicked()
         implicitWidth: t.implicitWidth + 22
         implicitHeight: 28
+        radius: 8
         color: on ? Theme.accent : (ma.containsMouse ? Theme.foreground : "transparent")
         border { width: 2; color: Theme.foreground }
         Text {
@@ -280,6 +281,7 @@ PanelWindow {
 
         implicitHeight: 34
         height: 34
+        radius: 8
         color: active ? Theme.accent : (ma.containsMouse ? Theme.foreground : "transparent")
         readonly property color ink: (active || ma.containsMouse) ? Theme.background : Theme.foreground
         readonly property string tail: (ma.containsMouse && hoverTail !== "") ? hoverTail : idleTail
@@ -322,6 +324,7 @@ PanelWindow {
             const room = win.height - y - 12;
             return room > 48 ? Math.min(want, room) : want;
         }
+        radius: 14
         color: Theme.background
         border { width: 2; color: Theme.foreground }
         clip: true
@@ -464,6 +467,7 @@ PanelWindow {
                     Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: 30
+                        radius: 8
                         color: "transparent"
                         border { width: 2; color: Theme.foreground }
                         TextInput {
